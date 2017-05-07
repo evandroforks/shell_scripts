@@ -2,6 +2,6 @@
 # Scripts Utilities
 
 
-Useful and seflt contained shell scripts for programming and time evaluation.
+Useful and self contained shell scripts for programming and time evaluation.
 
 
