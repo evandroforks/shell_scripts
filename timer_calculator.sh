@@ -31,7 +31,7 @@ showTheElapsedSeconds()
         scripExecutionTimeResult=$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")
         printf "Took '$scripExecutionTimeResult' seconds to run the script '$1'.\n"
     else
-        printf "Could not calculate the seconds to run '$1' script this time.\n"
+        printf "Could not calculate the seconds to run '$1'.\n"
     fi
 }
 
