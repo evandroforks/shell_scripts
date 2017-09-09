@@ -4,29 +4,25 @@
 # The time flag file path
 updateFlagFilePath="/tmp/.time_flag.txt"
 
-# Save the current seconds
+# Save the current seconds, only if it is not already saved
 if ! [ -f $updateFlagFilePath ]
 then
-    # Allow this variable to be visible form multiples shell script executions.
-    export scriptStartSecond=$(date +%s.%N)
-
-    # Create a flag file to avoid override the initial time.
-    echo "The time flag." > $updateFlagFilePath
+    # Create a flag file to avoid override the initial time and save it.
+    echo "$(date +%s.%N)" > $updateFlagFilePath
 fi
 
 # Calculates and prints to the screen the seconds elapsed since this script started.
 showTheElapsedSeconds()
 {
-    cleanUpdateFlagFile
+    # Clean the flag file and read the time
+    scriptStartSecond=$(cleanUpdateFlagFile)
 
     # Calculates whether the seconds program parameter is an integer number
     isFloatNumber $scriptStartSecond
 
-    # Captures the return value of the previous function call command
-    isFloat_returnValue=$?
-
+    # `$?` captures the return value of the previous function call command
     # Print help when it is not passed a second command line argument integer
-    if [ $isFloat_returnValue -eq 1 ]
+    if [ $? -eq 1 ]
     then
         scripExecutionTimeResult=$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")
         printf "Took '$scripExecutionTimeResult' seconds to run the script '$1'.\n"
@@ -40,6 +36,7 @@ cleanUpdateFlagFile()
 {
     if [ -f $updateFlagFilePath ]
     then
+        cat $updateFlagFilePath
         rm $updateFlagFilePath
     fi
 }
@@ -66,11 +63,9 @@ isInteger()
     # Calculates whether the first function parameter $1 is a number
     isEmpty $1
 
-    # Captures the return value of the previous function call command
-    isEmptyReturnValue=$?
-
+    # `$?` captures the return value of the previous function call command
     # Notify an invalid USB port number passed as parameter.
-    if ! [ $isEmptyReturnValue -eq 1 ]
+    if ! [ $? -eq 1 ]
     then
         if [ "$1" -eq "$1" ] 2>/dev/null
         then
@@ -90,11 +85,9 @@ isFloatNumber()
     # Calculates whether the first function parameter $1 is a number
     isEmpty $1
 
-    # Captures the return value of the previous function call command
-    isEmptyReturnValue=$?
-
+    # `$?` captures the return value of the previous function call command
     # Notify an invalid USB port number passed as parameter.
-    if ! [ $isEmptyReturnValue -eq 1 ]
+    if ! [ $? -eq 1 ]
     then
         # Removed the file extension, just in case there exists.
         firstFloatNumberPart=$(echo $1 | cut -d'.' -f 1)
