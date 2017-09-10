@@ -9,6 +9,7 @@ if ! [ -f $updateFlagFilePath ]
 then
     # Create a flag file to avoid override the initial time and save it.
     echo "$(date +%s.%N)" > $updateFlagFilePath
+    echo "Current time: $(date)"
 fi
 
 # Calculates and prints to the screen the seconds elapsed since this script started.
