@@ -26,10 +26,30 @@ showTheElapsedSeconds()
     if [ $? -eq 1 ]
     then
         scripExecutionTimeResult=$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")
-        printf "Took '$scripExecutionTimeResult' seconds to run the script '$1'.\n"
+        printf "Took '$(convert_seconds $(float_to_integer $scripExecutionTimeResult))' "
+        printf "seconds to run the script '$1'.\n"
     else
         printf "Could not calculate the seconds to run '$1'.\n"
     fi
+}
+
+# Convert seconds to hours, minutes, seconds
+# https://stackoverflow.com/questions/12199631/convert-seconds-to-hours-minutes-seconds
+convert_seconds()
+{
+    ((h=${1}/3600))
+    ((m=(${1}%3600)/60))
+    ((s=${1}%60))
+
+    printf "%02d:%02d:%02d" $h $m $s
+}
+
+# Bash: Float to Integer
+# https://unix.stackexchange.com/questions/89712/bash-float-to-integer
+float_to_integer()
+{
+    awk 'BEGIN{for (i=1; i<ARGC;i++)
+        printf "%.0f\n", ARGV[i]}' "$@"
 }
 
 # Clean the flag file
