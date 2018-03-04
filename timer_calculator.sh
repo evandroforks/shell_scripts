@@ -1,6 +1,5 @@
 
 
-
 # The time flag file path
 updateFlagFilePath="/tmp/.time_flag.txt"
 
@@ -8,9 +7,21 @@ updateFlagFilePath="/tmp/.time_flag.txt"
 if ! [ -f $updateFlagFilePath ]
 then
     # Create a flag file to avoid override the initial time and save it.
-    echo "$(date +%s.%N)" > $updateFlagFilePath
-    echo "Current time: $(date)"
+    printf "$(date +%s.%N)" > $updateFlagFilePath
+
+    printf "Current time: $(date)\n"
+    # printf "$1\n"
 fi
+
+# Clean the flag file
+cleanUpdateFlagFile()
+{
+    if [ -f $updateFlagFilePath ]
+    then
+        cat $updateFlagFilePath
+        rm $updateFlagFilePath
+    fi
+}
 
 # Calculates and prints to the screen the seconds elapsed since this script started.
 showTheElapsedSeconds()
@@ -27,7 +38,7 @@ showTheElapsedSeconds()
     then
         scripExecutionTimeResult=$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")
         printf "Took '$(convert_seconds $(float_to_integer $scripExecutionTimeResult))' "
-        printf "seconds to run the script '$1'.\n"
+        printf "seconds to run the script, $(date +%H:%M:%S).\n"
     else
         printf "Could not calculate the seconds to run '$1'.\n"
     fi
@@ -50,16 +61,6 @@ float_to_integer()
 {
     awk 'BEGIN{for (i=1; i<ARGC;i++)
         printf "%.0f\n", ARGV[i]}' "$@"
-}
-
-# Clean the flag file
-cleanUpdateFlagFile()
-{
-    if [ -f $updateFlagFilePath ]
-    then
-        cat $updateFlagFilePath
-        rm $updateFlagFilePath
-    fi
 }
 
 # Determine whether its first parameter is empty or not.
@@ -111,8 +112,8 @@ isFloatNumber()
     if ! [ $? -eq 1 ]
     then
         # Removed the file extension, just in case there exists.
-        firstFloatNumberPart=$(echo $1 | cut -d'.' -f 1)
-        secondFloatNumberPart=$(echo $1 | cut -d'.' -f 2)
+        firstFloatNumberPart=$(printf $1 | cut -d'.' -f 1)
+        secondFloatNumberPart=$(printf $1 | cut -d'.' -f 2)
 
         # Checks whether the first float number part is an integer.
         isInteger $firstFloatNumberPart
