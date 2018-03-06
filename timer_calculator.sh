@@ -1,3 +1,4 @@
+#!/bin/sh
 
 
 # The time flag file path
@@ -7,10 +8,10 @@ updateFlagFilePath="/tmp/.time_flag.txt"
 if ! [ -f $updateFlagFilePath ]
 then
     # Create a flag file to avoid override the initial time and save it.
-    printf "$(date +%s.%N)" > $updateFlagFilePath
+    printf "%s" "$(date +%s.%N)" > $updateFlagFilePath
 
-    printf "Current time: $(date)\n"
-    # printf "$1\n"
+    printf "Current time: %s\\n" "$(date)"
+    # printf "$1\\n"
 fi
 
 # Clean the flag file
@@ -30,17 +31,17 @@ showTheElapsedSeconds()
     scriptStartSecond=$(cleanUpdateFlagFile)
 
     # Calculates whether the seconds program parameter is an integer number
-    isFloatNumber $scriptStartSecond
+    isFloatNumber "$scriptStartSecond"
 
     # `$?` captures the return value of the previous function call command
     # Print help when it is not passed a second command line argument integer
     if [ $? -eq 1 ]
     then
         scripExecutionTimeResult=$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")
-        printf "Took '$(convert_seconds $(float_to_integer $scripExecutionTimeResult))' "
-        printf "seconds to run the script, $(date +%H:%M:%S).\n"
+        printf "Took '%s' " "$(convert_seconds "$(float_to_integer "$scripExecutionTimeResult")")"
+        printf "seconds to run the script, %s.\\n" "$(date +%H:%M:%S)"
     else
-        printf "Could not calculate the seconds to run '$1'.\n"
+        printf "Could not calculate the seconds to run '%s'.\\n" "$1"
     fi
 }
 
@@ -48,11 +49,7 @@ showTheElapsedSeconds()
 # https://stackoverflow.com/questions/12199631/convert-seconds-to-hours-minutes-seconds
 convert_seconds()
 {
-    ((h=${1}/3600))
-    ((m=(${1}%3600)/60))
-    ((s=${1}%60))
-
-    printf "%02d:%02d:%02d" $h $m $s
+    printf "%s" "$1" | awk '{printf("%d:%02d:%02d:%02d",($1/60/60/24),($1/60/60%24),($1/60%60),($1%60))}'
 }
 
 # Bash: Float to Integer
@@ -60,7 +57,7 @@ convert_seconds()
 float_to_integer()
 {
     awk 'BEGIN{for (i=1; i<ARGC;i++)
-        printf "%.0f\n", ARGV[i]}' "$@"
+        printf "%.0f\\n", ARGV[i]}' "$@"
 }
 
 # Determine whether its first parameter is empty or not.
@@ -83,7 +80,7 @@ isEmpty()
 isInteger()
 {
     # Calculates whether the first function parameter $1 is a number
-    isEmpty $1
+    isEmpty "$1"
 
     # `$?` captures the return value of the previous function call command
     # Notify an invalid USB port number passed as parameter.
@@ -105,18 +102,18 @@ isInteger()
 isFloatNumber()
 {
     # Calculates whether the first function parameter $1 is a number
-    isEmpty $1
+    isEmpty "$1"
 
     # `$?` captures the return value of the previous function call command
     # Notify an invalid USB port number passed as parameter.
     if ! [ $? -eq 1 ]
     then
         # Removed the file extension, just in case there exists.
-        firstFloatNumberPart=$(printf $1 | cut -d'.' -f 1)
-        secondFloatNumberPart=$(printf $1 | cut -d'.' -f 2)
+        firstFloatNumberPart=$(printf "%s" "$1" | cut -d'.' -f 1)
+        secondFloatNumberPart=$(printf "%s" "$1" | cut -d'.' -f 2)
 
         # Checks whether the first float number part is an integer.
-        isInteger $firstFloatNumberPart
+        isInteger "$firstFloatNumberPart"
 
         if ! [ $# -eq 1 ]
         then
@@ -124,7 +121,7 @@ isFloatNumber()
         fi
 
         # Checks whether the second float number part is an integer.
-        isInteger $secondFloatNumberPart
+        isInteger "$secondFloatNumberPart"
 
         if [ $# -eq 1 ]
         then
@@ -134,17 +131,4 @@ isFloatNumber()
 
     return 0
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 

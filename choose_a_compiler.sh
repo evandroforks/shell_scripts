@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 # Convert windows bars as \ to linux one /
 NEXT_PATH=$(echo $1 | sed -r "s|\\\|\/|g")
 

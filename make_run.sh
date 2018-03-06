@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 # Reliable way for a bash script to get the full path to itself?
 # http://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
 pushd `dirname $0` > /dev/null
