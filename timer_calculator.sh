@@ -10,8 +10,8 @@ then
     # Create a flag file to avoid override the initial time and save it.
     printf "%s" "$(date +%s.%N)" > $updateFlagFilePath
 
-    printf "Current time: %s\\n" "$(date)"
     # printf "$1\\n"
+    printf "Current time: %s\\n" "$(date)"
 fi
 
 # Clean the flag file
@@ -38,18 +38,24 @@ showTheElapsedSeconds()
     if [ $? -eq 1 ]
     then
         scripExecutionTimeResult=$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")
-        printf "Took '%s' " "$(convert_seconds "$(float_to_integer "$scripExecutionTimeResult")")"
+        integer_time="$(float_to_integer "$scripExecutionTimeResult")"
+
+        printf "Took '%s' " "$(convert_seconds "$integer_time" "$scripExecutionTimeResult")"
         printf "seconds to run the script, %s.\\n" "$(date +%H:%M:%S)"
     else
         printf "Could not calculate the seconds to run '%s'.\\n" "$1"
     fi
 }
 
-# Convert seconds to hours, minutes, seconds
+# Convert seconds to hours, minutes, seconds, milliseconds
 # https://stackoverflow.com/questions/12199631/convert-seconds-to-hours-minutes-seconds
+#
+# Awk printf number in width and round it up
+# https://unix.stackexchange.com/questions/131073/awk-printf-number-in-width-and-round-it-up
 convert_seconds()
 {
-    printf "%s" "$1" | awk '{printf("%d:%02d:%02d:%02d",($1/60/60/24),($1/60/60%24),($1/60%60),($1%60))}'
+    # printf "$1$2\n"
+    printf "%s %s" "$1" "$2" | awk '{printf("%d:%02d:%02d:%02d.%02.0f", ($1/60/60/24), ($1/60/60%24), ($1/60%60), ($1%60), (($2-$1)*100))}'
 }
 
 # Bash: Float to Integer
