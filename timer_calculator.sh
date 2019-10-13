@@ -22,7 +22,7 @@
 # SOFTWARE.
 
 # The time flag file path
-updateFlagFilePath="/$(pwd)/.time_flag.txt";
+updateFlagFilePath="$(pwd)/.time_flag.txt";
 
 # Save the current seconds, only if it is not already saved
 if ! [ -f "$updateFlagFilePath" ];
