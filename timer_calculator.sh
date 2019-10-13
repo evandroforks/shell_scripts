@@ -57,8 +57,11 @@ showTheElapsedSeconds()
     # Print help when it is not passed a second command line argument integer
     if [ "$?" -eq 1 ];
     then
-        scripExecutionTimeResult=$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}");
+        scripExecutionTimeResult="$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")";
         integer_time="$(float_to_integer "$scripExecutionTimeResult")"
+
+        # printf "integer_time '%s'\\n" "${integer_time}"
+        # printf "scripExecutionTimeResult '%s'\\n" "${scripExecutionTimeResult}"
 
         printf "Took '%s' " "$(convert_seconds "$integer_time" "$scripExecutionTimeResult")";
         printf "seconds to run the script, %s.\\n" "$(date +%H:%M:%S)";
@@ -74,16 +77,15 @@ showTheElapsedSeconds()
 # https://unix.stackexchange.com/questions/131073/awk-printf-number-in-width-and-round-it-up
 convert_seconds()
 {
-    # printf "$1$2\n";
     printf "%s %s" "$1" "$2" | awk '{printf("%d:%02d:%02d:%02d.%02.0f", ($1/60/60/24), ($1/60/60%24), ($1/60%60), ($1%60), (($2-$1)*100))}';
 }
 
 # Bash: Float to Integer
 # https://unix.stackexchange.com/questions/89712/bash-float-to-integer
+# https://stackoverflow.com/questions/12929848/how-make-float-to-integer-in-awk
 float_to_integer()
 {
-    awk 'BEGIN{for (i=1; i<ARGC;i++)
-        printf "%.0f\\n", ARGV[i]}' "$@";
+    awk 'BEGIN{for (i=1; i<ARGC;i++) printf "%d", int( ARGV[i] )}' "$@";
 }
 
 # Determine whether its first parameter is empty or not.
