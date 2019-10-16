@@ -28,8 +28,12 @@
 # The time flag file path
 updateFlagFilePath="$(pwd)/.time_flag.txt";
 
+pushd "$(dirname "$0")" > /dev/null || exit 1
+TIME_CALCULATOR_SCRIPT_FOLDER_PATH="$(pwd)"
+popd > /dev/null || exit 1
+
 # Save the current seconds, only if it is not already saved
-if ! [ -f "$updateFlagFilePath" ];
+if ! [[ -f "$updateFlagFilePath" ]];
 then
     # Create a flag file to avoid override the initial time and save it.
     printf "%s" "$(date +%s.%N)" > "$updateFlagFilePath";
@@ -41,7 +45,7 @@ fi;
 # Clean the flag file
 cleanUpdateFlagFile()
 {
-    if [ -f "$updateFlagFilePath" ];
+    if [[ -f "$updateFlagFilePath" ]];
     then
         cat "$updateFlagFilePath"
         rm "$updateFlagFilePath";
@@ -55,13 +59,10 @@ showTheElapsedSeconds()
     scriptStartSecond=$(cleanUpdateFlagFile);
 
     # Calculates whether the seconds program parameter is an integer number
-    isFloatNumber "$scriptStartSecond";
-
-    # `$?` captures the return value of the previous function call command
     # Print help when it is not passed a second command line argument integer
-    if [ "$?" -eq 1 ];
+    if isFloatNumber "$scriptStartSecond";
     then
-        scripExecutionTimeResult="$(awk "BEGIN {printf \"%.2f\",$(date +%s.%N)-$scriptStartSecond}")";
+        scripExecutionTimeResult="$(awk "BEGIN {printf \"%.2f\", $(date +%s.%N)-$scriptStartSecond}")";
         integer_time="$(float_to_integer "$scripExecutionTimeResult")"
 
         # printf "integer_time '%s'\\n" "${integer_time}"
@@ -79,87 +80,107 @@ showTheElapsedSeconds()
 #
 # Awk printf number in width and round it up
 # https://unix.stackexchange.com/questions/131073/awk-printf-number-in-width-and-round-it-up
-convert_seconds()
-{
+convert_seconds() {
     printf "%s %s" "$1" "$2" | awk '{printf("%d:%02d:%02d:%02d.%02.0f", ($1/60/60/24), ($1/60/60%24), ($1/60%60), ($1%60), (($2-$1)*100))}';
 }
 
 # Bash: Float to Integer
 # https://unix.stackexchange.com/questions/89712/bash-float-to-integer
 # https://stackoverflow.com/questions/12929848/how-make-float-to-integer-in-awk
-float_to_integer()
-{
+float_to_integer() {
     awk 'BEGIN{for (i=1; i<ARGC;i++) printf "%d", int( ARGV[i] )}' "$@";
 }
 
-# Determine whether its first parameter is empty or not.
-#
-# Returns 1 if empty, otherwise returns 0.
-isEmpty()
+
+# Determine whether the first parameter is an integer or not.
+# Returns 0 if the specified string is an integer, otherwise returns 1.
+isInteger()
 {
-    if [ -z ${1+x} ];
+    # Calculates whether the first function parameter $1 is a number
+    if ! [[ -z "$1" ]];
     then
+        if [ "$1" -eq "$1" ] 2>/dev/null;
+        then
+            return 0;
+        fi;
+    fi;
+
+    return 1;
+}
+
+
+# Determine whether the first parameter is an integer or not.
+# Returns 0 if the specified string is an float, otherwise returns 1.
+isFloatNumber()
+{
+    # Calculates whether the first function parameter $1 is a number
+    # Notify an invalid USB port number passed as parameter.
+    if ! [[ -z "$1" ]];
+    then
+        # Removed the file extension, just in case there exists.
+        firstFloatNumberPart=$(printf '%s' "$1" | cut -d'.' -f 1);
+        secondFloatNumberPart=$(printf '%s' "$1" | cut --only-delimited -d'.' -f 2);
+        thirdNumberPart=$(printf '%s' "$1" | cut --only-delimited -d'.' -f 3);
+
+        # printf 'a "%s", b "%s", c "%s"\n' "$firstFloatNumberPart" "$secondFloatNumberPart" "$thirdNumberPart"
+        # Checks whether the first float number part is an integer.
+        if [[ -z "$firstFloatNumberPart" ]];
+        then
+            if ! isInteger "$secondFloatNumberPart";
+            then
+                return 1;
+            fi;
+        else
+            if ! isInteger "$firstFloatNumberPart";
+            then
+                return 1;
+            fi;
+        fi
+
+        # Checks whether the second float number part is an integer.
+        if ! [[ -z "$secondFloatNumberPart" ]];
+        then
+            if ! isInteger "$secondFloatNumberPart";
+            then
+                return 1;
+            fi;
+        fi;
+
+        # Checks whether the third float number part is empty.
+        if ! [[ -z "$thirdNumberPart" ]];
+        then
+            return 1;
+        fi;
+    else
         return 1;
     fi;
 
     return 0;
 }
 
-
-# Determine whether the first parameter is an integer or not.
-#
-# Returns 1 if the specified string is an integer, otherwise returns 0.
-isInteger()
-{
-    # Calculates whether the first function parameter $1 is a number
-    isEmpty "$1";
-
-    # `$?` captures the return value of the previous function call command
-    # Notify an invalid USB port number passed as parameter.
-    if ! [ $? -eq 1 ];
-    then
-        if [ "$1" -eq "$1" ] 2>/dev/null;
-        then
-            return 1;
-        fi;
-    fi;
-
-    return 0;
+# To run unit tests call: ./this_script_name.sh runTests
+# wget https://raw.githubusercontent.com/kward/shunit2/master/shunit2
+runTests() {
+    source "${TIME_CALCULATOR_SCRIPT_FOLDER_PATH}/shunit2"
 }
 
+testIsFloatNumber1()  { isFloatNumber 1;      assertEquals 0 $?; }
+testIsFloatNumber2()  { isFloatNumber 1.1;    assertEquals 0 $?; }
+testIsFloatNumber3()  { isFloatNumber 1.1.;   assertEquals 0 $?; }
+testIsFloatNumber4()  { isFloatNumber .1.;    assertEquals 0 $?; }
+testIsFloatNumber5()  { isFloatNumber ..;     assertEquals 1 $?; }
+testIsFloatNumber6()  { isFloatNumber .1.1.;  assertEquals 1 $?; }
+testIsFloatNumber7()  { isFloatNumber .1.1.1; assertEquals 1 $?; }
+testIsFloatNumber8()  { isFloatNumber 1.1.1;  assertEquals 1 $?; }
+testIsFloatNumber9()  { isFloatNumber 1.1d;   assertEquals 1 $?; }
+testIsFloatNumber10() { isFloatNumber d1.1d;  assertEquals 1 $?; }
+testIsFloatNumber11() { isFloatNumber d1.1;   assertEquals 1 $?; }
+testIsFloatNumber12() { isFloatNumber 1d.1;   assertEquals 1 $?; }
+testIsFloatNumber13() { isFloatNumber 1d.d1;  assertEquals 1 $?; }
+testIsFloatNumber14() { isFloatNumber 1.d1;   assertEquals 1 $?; }
+testIsFloatNumber15() { isFloatNumber ;       assertEquals 1 $?; }
 
-# Determine whether the first parameter is an integer or not.
-#
-# Returns 1 if the specified string is an integer, otherwise returns 0.
-isFloatNumber()
-{
-    # Calculates whether the first function parameter $1 is a number
-    isEmpty "$1";
+if [[ "${1}" == "runTests" ]]; then
+    runTests;
+fi
 
-    # `$?` captures the return value of the previous function call command
-    # Notify an invalid USB port number passed as parameter.
-    if ! [ $? -eq 1 ];
-    then
-        # Removed the file extension, just in case there exists.
-        firstFloatNumberPart=$(printf "%s" "$1" | cut -d'.' -f 1);
-        secondFloatNumberPart=$(printf "%s" "$1" | cut -d'.' -f 2);
-
-        # Checks whether the first float number part is an integer.
-        isInteger "$firstFloatNumberPart";
-
-        if ! [ $# -eq 1 ];
-        then
-            return 0;
-        fi;
-
-        # Checks whether the second float number part is an integer.
-        isInteger "$secondFloatNumberPart";
-
-        if [ $# -eq 1 ];
-        then
-            return 1;
-        fi;
-    fi;
-
-    return 0;
-}
